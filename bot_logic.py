@@ -127,6 +127,7 @@ async def wrong_answer(callback: types.CallbackQuery):
 async def cmd_start(message: types.Message):
     builder = ReplyKeyboardBuilder()
     builder.add(types.KeyboardButton(text="Начать игру"))
+    builder.add(types.KeyboardButton(text="Последний результат"))
     await message.answer("Добро пожаловать в квиз!", reply_markup=builder.as_markup(resize_keyboard=True))
 
 
@@ -184,19 +185,25 @@ async def cmd_quiz(message: types.Message):
 
     # Показываем предыдущие достижения
     best_score = await get_previous_best_score(user_id)
-    last_score = await get_last_score(user_id)
 
     if best_score > 0:
         await message.answer(f"Ваш лучший результат: {best_score}/10")
         await asyncio.sleep(TIME_DELAY)
-        if last_score and last_score != best_score:
-            await message.answer(f"Последний результат: {last_score}/10")
-            await asyncio.sleep(TIME_DELAY)
 
     await message.answer(f"Давайте начнем квиз! Всего будет {len(quiz_data)} вопросов.")
     await asyncio.sleep(TIME_DELAY)
     await get_question(message, user_id)
 
+
+@dp.message(F.text=="Последний результат")
+@dp.message(Command("stats"))
+async def cmd_stats(message: types.Message):
+    user_id = message.from_user.id
+
+    last_score = await get_last_score(user_id)
+
+    if last_score > 0:
+        await message.answer(f"Ваш прошлый результат: {last_score}/10")
 
 
 # Запуск процесса поллинга новых апдейтов
